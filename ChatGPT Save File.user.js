@@ -26,39 +26,153 @@
         saveToFileButton.innerText = 'Save to File';
         saveToFileButton.classList.add('save-to-file-button');
         saveToFileButton.style.marginLeft = '10px';
-
         // Define the button's functionality
         saveToFileButton.onclick = function() {
             // Extract code text
             const codeContent = codeContainer.querySelector('code').innerText;
+            const hostElement = codeContainer.parentElement.parentElement;
+            let fnAel = hostElement.querySelector('h3'); //.innerText;
+            let fnBel = hostElement.querySelector('p code'); //.innerText
+            var messageElement = '';
+            if (fnAel !== undefined&&null!==fnAel) {
+                messageElement=fnAel.innerText;
+            }
+            else if (fnBel !== undefined&&null!==fnBel) {
+                messageElement=fnBel.innerText;
+            }
+            // Extract and concatenate the text content of all h3 elements
+            //messageElements.forEach(element => {
+            //    messageContent += element.innerText + ' ';
+            //});
+
             const language = codeContainer.querySelector('.flex.items-center.relative span').innerText.toLowerCase();
             let extension = 'txt';
+            let mime = 'text/plain';
 
-            switch (language) {
-                case 'javascript':
-                    extension = 'js';
-                    break;
-                case 'python':
-                    extension = 'py';
-                    break;
-                case 'csharp':
-                    extension = 'cs';
-                    break;
-                case 'json':
-                    extension = 'json';
-                    break;
-                // Add more cases as needed
-                default:
-                    extension = 'txt';
-            }
+    switch (language) {
+    case 'javascript':
+        extension = 'js';
+        mime = 'application/javascript';
+        break;
+    case 'python':
+        extension = 'py';
+        mime = 'text/x-python';
+        break;
+    case 'csharp':
+        extension = 'cs';
+        mime = 'text/plain';
+        break;
+    case 'json':
+        extension = 'json';
+        mime = 'application/json';
+        break;
+    case 'html':
+        extension = 'html';
+        mime = 'text/html';
+        break;
+    case 'css':
+        extension = 'css';
+        mime = 'text/css';
+        break;
+    case 'java':
+        extension = 'java';
+        mime = 'text/x-java-source';
+        break;
+    case 'ruby':
+        extension = 'rb';
+        mime = 'text/x-ruby';
+        break;
+    case 'php':
+        extension = 'php';
+        mime = 'application/x-httpd-php';
+        break;
+    case 'xml':
+        extension = 'xml';
+        mime = 'application/xml';
+        break;
+    case 'yaml':
+        extension = 'yaml';
+        mime = 'text/yaml';
+        break;
+    case 'sql':
+        extension = 'sql';
+        mime = 'application/sql';
+        break;
+    case 'markdown':
+        extension = 'md';
+        mime = 'text/markdown';
+        break;
+    case 'plaintext':
+        extension = 'txt';
+        mime = 'text/plain';
+        break;
+    case 'typescript':
+        extension = 'ts';
+        mime = 'application/typescript';
+        break;
+    case 'go':
+        extension = 'go';
+        mime = 'text/x-go';
+        break;
+    case 'kotlin':
+        extension = 'kt';
+        mime = 'text/x-kotlin';
+        break;
+    case 'swift':
+        extension = 'swift';
+        mime = 'text/x-swift';
+        break;
+    case 'r':
+        extension = 'r';
+        mime = 'text/x-rsrc';
+        break;
+    case 'perl':
+        extension = 'pl';
+        mime = 'text/x-perl';
+        break;
+    case 'lua':
+        extension = 'lua';
+        mime = 'text/x-lua';
+        break;
+    case 'shell':
+        extension = 'sh';
+        mime = 'application/x-sh';
+        break;
+    case 'batch':
+        extension = 'bat';
+        mime = 'application/x-bat';
+        break;
+    case 'powershell':
+        extension = 'ps1';
+        mime = 'application/x-powershell';
+        break;
+    case 'scala':
+        extension = 'scala';
+        mime = 'text/x-scala';
+        break;
+    case 'rust':
+        extension = 'rs';
+        mime = 'text/x-rustsrc';
+        break;
+    // Add more cases as needed
+    default:
+        extension = 'txt';
+        mime = 'text/plain';
+}
 
-            const blob = new Blob([codeContent], { type: 'text/plain' });
+            const blob = new Blob([codeContent], { type: mime });
             const url = URL.createObjectURL(blob);
+
+            // Trim any extra spaces and check if the filename already ends with the extension
+            let filename = messageElement.trim();
+            if (!filename.endsWith(`.${extension}`)) {
+                filename += `.${extension}`;
+            }
 
             // Create a temporary link to download the file
             const link = document.createElement('a');
             link.href = url;
-            link.download = `code.${extension}`;
+            link.download = `${filename}`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -66,6 +180,7 @@
             // Clean up the blob URL
             URL.revokeObjectURL(url);
         };
+
 
         // Create a container for the buttons and append both buttons to it
         const buttonContainer = document.createElement('div');
