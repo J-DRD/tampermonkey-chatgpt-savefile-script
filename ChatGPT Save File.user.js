@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         ChatGPT Save File
 // @namespace    https://chatgpt.com/
-// @version      0.1
+// @version      0.3
 // @description  Add a 'Save File' button and relocate underneath codeblock.
 // @author       J-DRD
 // @match        https://chatgpt.com/*
 // @icon         https://www.google.com/s2/favicons?sz=64&domain=chatgpt.com
 // @grant        none
+// @require      https://cdnjs.cloudflare.com/ajax/libs/jszip/3.6.0/jszip.min.js
 // ==/UserScript==
 
 (function() {
@@ -26,6 +27,13 @@
     saveToFileButton.innerText = 'Save to File';
     saveToFileButton.classList.add('save-to-file-button');
     saveToFileButton.style.marginLeft = '10px';
+
+    // Create a checkbox for file selection
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.classList.add('file-checkbox');
+    checkbox.style.marginLeft = '10px';
+
     // Define the button's functionality
     saveToFileButton.onclick = function() {
       // Extract code text
@@ -42,10 +50,7 @@
       } else if (fnCel !== undefined && fnCel !== null) {
         messageElement = fnCel.innerText;
       }
-      // Extract and concatenate the text content of all h3 elements
-      //messageElements.forEach(element => {
-      //    messageContent += element.innerText + ' ';
-      //});
+
 
       const language = codeContainer.querySelector('.flex.items-center.relative span').innerText.toLowerCase();
       let extension = 'txt';
@@ -185,7 +190,6 @@
       URL.revokeObjectURL(url);
     };
 
-
     // Create a container for the buttons and append both buttons to it
     const buttonContainer = document.createElement('div');
     buttonContainer.classList.add('button-container');
@@ -193,13 +197,80 @@
     buttonContainer.style.justifyContent = 'flex-end';
     buttonContainer.style.marginTop = '10px';
 
-    // Append the buttons to the button container
+    // Append the buttons and checkbox to the button container
     buttonContainer.appendChild(copyCodeButton);
     buttonContainer.appendChild(saveToFileButton);
+    buttonContainer.appendChild(checkbox);
 
     // Append the button container to the code container
     codeContainer.appendChild(buttonContainer);
   }
+
+  function createZipAndDownload() {
+    const JSZip = window.JSZip;
+    const zip = new JSZip();
+    const checkedBoxes = document.querySelectorAll('.file-checkbox:checked');
+
+    checkedBoxes.forEach((checkbox, index) => {
+      const codeContainer = checkbox.closest('.prose pre');
+      const codeContent = codeContainer.querySelector('code').innerText;
+      const hostElement = codeContainer.parentElement.parentElement;
+      let fnAel = hostElement.querySelector('h3');
+      let fnBel = hostElement.querySelector('p code');
+      let fnCel = hostElement.querySelector('strong');
+      var messageElement = '';
+      if (fnAel !== undefined && fnAel !== null) {
+        messageElement = fnAel.innerText;
+      } else if (fnBel !== undefined && fnBel !== null) {
+        messageElement = fnBel.innerText;
+      } else if (fnCel !== undefined && fnCel !== null) {
+        messageElement = fnCel.innerText;
+      }
+
+      const language = codeContainer.querySelector('.flex.items-center.relative span').innerText.toLowerCase();
+      let extension = 'txt';
+
+      switch (language) {
+        case 'javascript':
+          extension = 'js';
+          break;
+        case 'python':
+          extension = 'py';
+          break;
+          // Add more cases as needed
+        default:
+          extension = 'txt';
+      }
+
+      let filename = messageElement.trim();
+      if (!filename.endsWith(`.${extension}`)) {
+        filename += `.${extension}`;
+      }
+
+      zip.file(`src/${filename}`, codeContent);
+    });
+
+    zip.generateAsync({
+      type: 'blob'
+    }).then(function(content) {
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(content);
+      link.download = 'files.zip';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    });
+  }
+
+  // Create and add the "Download Zip" button
+  const downloadZipButton = document.createElement('button');
+  downloadZipButton.innerText = 'Download Zip';
+  downloadZipButton.style.position = 'fixed';
+  downloadZipButton.style.bottom = '10px';
+  downloadZipButton.style.right = '10px';
+  downloadZipButton.style.zIndex = '1000';
+  downloadZipButton.onclick = createZipAndDownload;
+  document.body.appendChild(downloadZipButton);
 
   // Set an interval to check for new code blocks every second
   setInterval(function() {
